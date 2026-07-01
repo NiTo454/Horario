@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import FormularioMateria from '@/components/FormularioMateria';
+import LottieSpinner from '@/components/LottieSpinner';
 import { Semester, Subject } from '@/types';
 import { 
   getSemesters, 
@@ -215,7 +216,7 @@ export default function AdminPage() {
     return (
       <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex flex-col items-center justify-center">
         <div className="flex flex-col items-center gap-3">
-          <RefreshCw className="w-8 h-8 text-purple-600 animate-spin" />
+          <LottieSpinner size={120} />
           <span className="text-xs text-purple-500 font-bold uppercase tracking-wider">Cargando Sistema...</span>
         </div>
       </div>
@@ -293,7 +294,7 @@ export default function AdminPage() {
             >
               {authLoading ? (
                 <>
-                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  <LottieSpinner size={20} className="invert dark:invert-0" />
                   <span>Verificando...</span>
                 </>
               ) : (
