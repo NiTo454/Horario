@@ -19,8 +19,15 @@ interface GridHorarioProps {
 }
 
 export default function GridHorario({ subjects }: GridHorarioProps) {
+  const getTodayValue = () => {
+    const day = new Date().getDay();
+    if (day === 0) return 1; // Fallback Domingo a Lunes
+    return day;
+  };
+
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
+  const [selectedDay, setSelectedDay] = useState<number>(getTodayValue());
 
   // Time configurations
   const START_HOUR = 7; // 07:00
@@ -230,71 +237,166 @@ export default function GridHorario({ subjects }: GridHorarioProps) {
 
           {/* LIST VIEW */}
           {viewMode === 'list' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {activeDays.map(day => {
-                const daySlots = allSlots
-                  .filter(slot => slot.dayOfWeek === day.value)
-                  .sort((a, b) => a.startTime.localeCompare(b.startTime));
+            <>
+              {/* Mobile View (Day Tabs + Vertical Timeline) - Visible only on mobile */}
+              <div className="block md:hidden w-full flex flex-col gap-4 animate-zoom-in">
+                {/* Horizontal Scrollable Day Selector */}
+                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none snap-x">
+                  {activeDays.map(day => {
+                    const isSelected = selectedDay === day.value;
+                    const daySlotsCount = allSlots.filter(slot => slot.dayOfWeek === day.value).length;
+                    
+                    return (
+                      <button
+                        key={day.value}
+                        onClick={() => setSelectedDay(day.value)}
+                        className={`flex-1 min-w-[70px] snap-center py-2.5 px-3 rounded-2xl border text-center transition-all flex flex-col gap-0.5 ${
+                          isSelected
+                            ? 'bg-purple-600 border-purple-600 text-white shadow-md shadow-purple-500/10'
+                            : 'bg-white dark:bg-zinc-900 border-purple-100 dark:border-purple-900 text-purple-900 dark:text-purple-300'
+                        }`}
+                      >
+                        <span className="text-[10px] uppercase font-bold tracking-wider opacity-80">
+                          {day.label.slice(0, 3)}
+                        </span>
+                        <span className="text-xs font-black">
+                          {daySlotsCount} {daySlotsCount === 1 ? 'Clase' : 'Clases'}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
 
-                return (
-                  <div 
-                    key={day.value} 
-                    className="flex flex-col gap-3 bg-purple-50/20 dark:bg-purple-950/5 p-4 rounded-2xl border border-purple-100 dark:border-purple-900"
-                  >
-                    <div className="flex items-center justify-between border-b border-purple-100 dark:border-purple-900 pb-2 mb-1">
-                      <span className="font-bold text-purple-950 dark:text-purple-200 text-sm uppercase tracking-wider">
-                        {day.label}
-                      </span>
-                      <span className="text-xs bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 font-bold px-2 py-0.5 rounded-full">
-                        {daySlots.length} {daySlots.length === 1 ? 'materia' : 'materias'}
-                      </span>
-                    </div>
+                {/* Selected Day Timeline */}
+                <div className="mt-2 flex flex-col gap-4">
+                  <div className="flex items-center justify-between border-b border-purple-100 dark:border-purple-900/50 pb-2">
+                    <span className="font-bold text-sm text-purple-950 dark:text-purple-200 uppercase tracking-widest">
+                      Agenda del {DAYS_OF_WEEK.find(d => d.value === selectedDay)?.label}
+                    </span>
+                  </div>
 
-                    {daySlots.length === 0 ? (
-                      <p className="text-xs text-purple-400 dark:text-purple-700 italic py-4 text-center">
-                        Sin clases programadas
+                  {allSlots.filter(s => s.dayOfWeek === selectedDay).length === 0 ? (
+                    <div className="text-center py-12 bg-purple-50/20 dark:bg-purple-950/5 border border-dashed border-purple-100 dark:border-purple-900 rounded-3xl">
+                      <p className="text-xs text-purple-400 dark:text-purple-650 italic">
+                        No hay clases programadas para este día
                       </p>
-                    ) : (
-                      <div className="flex flex-col gap-3">
-                        {daySlots.map((slot, index) => (
-                          <button
-                            key={`${slot.id}-${index}`}
-                            onClick={() => setSelectedSubject(slot.subject)}
-                            className={`p-3 rounded-xl border text-left text-xs transition-all shadow-xs flex flex-col gap-2 hover:scale-[1.01] ${getColorClasses(slot.subject.color)}`}
-                          >
-                            <div className="flex justify-between items-start gap-2">
-                              <span className="font-bold text-purple-950 dark:text-white text-sm">
+                    </div>
+                  ) : (
+                    <div className="relative pl-6 border-l border-purple-200 dark:border-purple-900 flex flex-col gap-6 py-2">
+                      {allSlots
+                        .filter(slot => slot.dayOfWeek === selectedDay)
+                        .sort((a, b) => a.startTime.localeCompare(b.startTime))
+                        .map((slot, idx) => (
+                          <div key={`${slot.id}-${idx}`} className="relative flex flex-col gap-1.5">
+                            {/* Timeline node dot */}
+                            <span className="absolute -left-[33px] top-1.5 w-4.5 h-4.5 rounded-full bg-purple-600 border-4 border-zinc-50 dark:border-zinc-950 shadow-xs" />
+                            
+                            {/* Time indicators */}
+                            <div className="flex items-center gap-1.5 text-[11px] font-bold text-purple-600 dark:text-purple-400">
+                              <Clock className="w-3.5 h-3.5" />
+                              <span>{slot.startTime} - {slot.endTime}</span>
+                            </div>
+
+                            {/* Subject card */}
+                            <button
+                              onClick={() => setSelectedSubject(slot.subject)}
+                              className={`p-4 rounded-2xl border text-left text-xs transition-all shadow-xs flex flex-col gap-2 ${getColorClasses(slot.subject.color)}`}
+                            >
+                              <span className="font-bold text-sm text-purple-950 dark:text-white leading-tight">
                                 {slot.subject.name}
                               </span>
-                              <span className="shrink-0 bg-white/60 dark:bg-black/30 px-2 py-0.5 rounded-md font-bold text-[10px] text-purple-950 dark:text-purple-200">
-                                {slot.startTime} - {slot.endTime}
-                              </span>
-                            </div>
-                            
-                            {(slot.subject.teacher || slot.subject.classroom) && (
-                              <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] opacity-80 border-t border-purple-950/5 dark:border-white/5 pt-1.5">
-                                {slot.subject.classroom && (
-                                  <span className="flex items-center gap-1">
-                                    <MapPin className="w-3 h-3 text-purple-700 dark:text-purple-400" />
-                                    <span>Aula: {slot.subject.classroom}</span>
-                                  </span>
-                                )}
-                                {slot.subject.teacher && (
-                                  <span className="flex items-center gap-1">
-                                    <User className="w-3 h-3 text-purple-700 dark:text-purple-400" />
-                                    <span className="truncate">{slot.subject.teacher}</span>
-                                  </span>
-                                )}
-                              </div>
-                            )}
-                          </button>
+                              
+                              {(slot.subject.teacher || slot.subject.classroom) && (
+                                <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] opacity-80 border-t border-purple-950/5 dark:border-white/5 pt-2 mt-1">
+                                  {slot.subject.classroom && (
+                                    <span className="flex items-center gap-1">
+                                      <MapPin className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+                                      <span>Aula: {slot.subject.classroom}</span>
+                                    </span>
+                                  )}
+                                  {slot.subject.teacher && (
+                                    <span className="flex items-center gap-1">
+                                      <User className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+                                      <span>Docente: {slot.subject.teacher}</span>
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+                            </button>
+                          </div>
                         ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Desktop/Tablet View (Original Grid Cards) - Visible on tablet/desktop */}
+              <div className="hidden md:grid grid-cols-2 lg:grid-cols-3 gap-6">
+                {activeDays.map(day => {
+                  const daySlots = allSlots
+                    .filter(slot => slot.dayOfWeek === day.value)
+                    .sort((a, b) => a.startTime.localeCompare(b.startTime));
+
+                  return (
+                    <div 
+                      key={day.value} 
+                      className="flex flex-col gap-3 bg-purple-50/20 dark:bg-purple-950/5 p-4 rounded-2xl border border-purple-100 dark:border-purple-900"
+                    >
+                      <div className="flex items-center justify-between border-b border-purple-100 dark:border-purple-900 pb-2 mb-1">
+                        <span className="font-bold text-purple-950 dark:text-purple-200 text-sm uppercase tracking-wider">
+                          {day.label}
+                        </span>
+                        <span className="text-xs bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 font-bold px-2 py-0.5 rounded-full">
+                          {daySlots.length} {daySlots.length === 1 ? 'materia' : 'materias'}
+                        </span>
                       </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+
+                      {daySlots.length === 0 ? (
+                        <p className="text-xs text-purple-400 dark:text-purple-700 italic py-4 text-center">
+                          Sin clases programadas
+                        </p>
+                      ) : (
+                        <div className="flex flex-col gap-3">
+                          {daySlots.map((slot, index) => (
+                            <button
+                              key={`${slot.id}-${index}`}
+                              onClick={() => setSelectedSubject(slot.subject)}
+                              className={`p-3 rounded-xl border text-left text-xs transition-all shadow-xs flex flex-col gap-2 hover:scale-[1.01] ${getColorClasses(slot.subject.color)}`}
+                            >
+                              <div className="flex justify-between items-start gap-2">
+                                <span className="font-bold text-purple-950 dark:text-white text-sm">
+                                  {slot.subject.name}
+                                </span>
+                                <span className="shrink-0 bg-white/60 dark:bg-black/30 px-2 py-0.5 rounded-md font-bold text-[10px] text-purple-950 dark:text-purple-200">
+                                  {slot.startTime} - {slot.endTime}
+                                </span>
+                              </div>
+                              
+                              {(slot.subject.teacher || slot.subject.classroom) && (
+                                <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] opacity-80 border-t border-purple-950/5 dark:border-white/5 pt-1.5">
+                                  {slot.subject.classroom && (
+                                    <span className="flex items-center gap-1">
+                                      <MapPin className="w-3 h-3 text-purple-700 dark:text-purple-400" />
+                                      <span>Aula: {slot.subject.classroom}</span>
+                                    </span>
+                                  )}
+                                  {slot.subject.teacher && (
+                                    <span className="flex items-center gap-1">
+                                      <User className="w-3 h-3 text-purple-700 dark:text-purple-400" />
+                                      <span className="truncate">{slot.subject.teacher}</span>
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </>
           )}
         </>
       )}

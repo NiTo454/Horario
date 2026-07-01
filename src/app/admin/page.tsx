@@ -17,7 +17,9 @@ import {
   User, 
   MapPin,
   Sparkles,
-  RefreshCw
+  RefreshCw,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import Link from 'next/link';
 import FormularioMateria from '@/components/FormularioMateria';
@@ -38,6 +40,7 @@ export default function AdminPage() {
   const [password, setPassword] = useState('');
   const [authError, setAuthError] = useState<string | null>(null);
   const [authLoading, setAuthLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   // Data states
   const [semesters, setSemesters] = useState<Semester[]>([]);
@@ -222,7 +225,7 @@ export default function AdminPage() {
   // Render login screen if not authenticated
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex flex-col items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-zinc-50 to-purple-50/30 dark:from-zinc-950 dark:to-purple-950/10 flex flex-col items-center justify-center p-4">
         <div className="w-full max-w-md bg-white dark:bg-zinc-900 border border-purple-100 dark:border-purple-950 rounded-3xl shadow-xl overflow-hidden animate-zoom-in">
           
           {/* Logo header */}
@@ -232,45 +235,78 @@ export default function AdminPage() {
             </div>
             <div>
               <h2 className="text-xl font-black tracking-tight leading-tight">Acceso Administrativo</h2>
-              <p className="text-purple-200 text-xs mt-1">Configura horarios de enfermería</p>
+              <p className="text-purple-200 text-xs mt-1">Configuración y Edición de Horarios</p>
             </div>
           </div>
 
           {/* Form body */}
-          <form onSubmit={handleLogin} className="p-8 flex flex-col gap-5">
+          <form onSubmit={handleLogin} className="p-8 flex flex-col gap-6">
+            <div className="bg-purple-50/50 dark:bg-purple-950/20 border border-purple-100/50 dark:border-purple-900/50 p-4 rounded-2xl">
+              <p className="text-xs text-purple-950 dark:text-purple-300 font-semibold leading-relaxed">
+                ℹ️ **Nota de Acceso**: Ingresa la clave de administrador para configurar semestres, añadir materias y asignar bloques de horario. 
+              </p>
+              <p className="text-[10px] text-purple-500/90 dark:text-purple-400 font-medium mt-1.5">
+                *(Esta clave se configura en el archivo <code className="bg-purple-100/50 dark:bg-purple-900/60 px-1 py-0.5 rounded font-mono">.env</code> local o en Vercel)*
+              </p>
+            </div>
+
             {authError && (
-              <div className="p-3.5 bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-950 rounded-xl flex gap-2 items-center text-xs">
+              <div className="p-3.5 bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-950 rounded-xl flex gap-2.5 items-center text-xs animate-pulse">
                 <AlertCircle className="w-4 h-4 shrink-0" />
-                <span className="font-semibold">{authError}</span>
+                <span className="font-bold">{authError}</span>
               </div>
             )}
 
             <div className="flex flex-col gap-1.5">
               <label htmlFor="admin-pass" className="text-xs font-bold uppercase tracking-wider text-purple-900 dark:text-purple-400">
-                Contraseña
+                Contraseña de Administrador
               </label>
-              <input
-                id="admin-pass"
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Ingrese contraseña de administrador"
-                className="w-full px-4 py-3 rounded-xl border border-purple-100 dark:border-purple-800 bg-white dark:bg-zinc-950 text-purple-950 dark:text-purple-100 focus:outline-hidden focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-all text-sm"
-              />
+              <div className="relative">
+                <input
+                  id="admin-pass"
+                  type={showPassword ? "text" : "password"}
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Ej. admin123"
+                  className="w-full pl-4 pr-11 py-3 rounded-xl border border-purple-100 dark:border-purple-800 bg-white dark:bg-zinc-950 text-purple-950 dark:text-purple-100 focus:outline-hidden focus:ring-2 focus:ring-purple-650 focus:border-transparent transition-all text-sm"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-3.5 p-1 text-purple-400 hover:text-purple-600 dark:hover:text-purple-250 transition-colors"
+                  title={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                >
+                  {showPassword ? (
+                    <EyeOff className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
+                </button>
+              </div>
             </div>
 
             <button
               type="submit"
               disabled={authLoading}
-              className="w-full py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold transition-all shadow-md hover:shadow-lg active:scale-98 disabled:opacity-50"
+              className="w-full py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold transition-all shadow-md hover:shadow-lg active:scale-98 disabled:opacity-50 flex items-center justify-center gap-2"
             >
-              {authLoading ? 'Verificando...' : 'Iniciar Sesión'}
+              {authLoading ? (
+                <>
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  <span>Verificando...</span>
+                </>
+              ) : (
+                <>
+                  <Unlock className="w-4 h-4" />
+                  <span>Iniciar Sesión</span>
+                </>
+              )}
             </button>
             
             <Link
               href="/"
-              className="text-center text-xs text-purple-500 hover:text-purple-700 font-bold transition-colors mt-2 flex items-center justify-center gap-1.5"
+              className="text-center text-xs text-purple-500 hover:text-purple-700 font-bold transition-colors mt-1.5 flex items-center justify-center gap-1.5"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               Volver a vista estudiantes

@@ -6,7 +6,8 @@ import {
   Settings, 
   Download, 
   CalendarDays,
-  Sparkles
+  Sparkles,
+  WifiOff
 } from 'lucide-react';
 import Link from 'next/link';
 import GridHorario from './GridHorario';
@@ -24,15 +25,71 @@ export default function StudentScheduleView({
   const [selectedSemesterId, setSelectedSemesterId] = useState<string>('');
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isInstallable, setIsInstallable] = useState(false);
+  const [isOffline, setIsOffline] = useState(false);
+  const [localSemesters, setLocalSemesters] = useState<Semester[]>([]);
 
-  // Set default active semester
+  // Detect connection status
   useEffect(() => {
-    if (activeSemester) {
-      setSelectedSemesterId(activeSemester.id);
-    } else if (semesters.length > 0) {
-      setSelectedSemesterId(semesters[0].id);
+    setIsOffline(!navigator.onLine);
+
+    const goOnline = () => setIsOffline(false);
+    const goOffline = () => setIsOffline(true);
+
+    window.addEventListener('online', goOnline);
+    window.addEventListener('offline', goOffline);
+
+    return () => {
+      window.removeEventListener('online', goOnline);
+      window.removeEventListener('offline', goOffline);
+    };
+  }, []);
+
+  // Offline caching logic
+  useEffect(() => {
+    if (semesters && semesters.length > 0) {
+      setLocalSemesters(semesters);
+      try {
+        localStorage.setItem('cached_semesters', JSON.stringify(semesters));
+        if (activeSemester) {
+          localStorage.setItem('cached_active_semester_id', activeSemester.id);
+        }
+      } catch (err) {
+        console.error('Failed to cache semesters locally:', err);
+      }
+    } else {
+      // If props are empty (e.g. offline load failed), attempt to load from cache
+      try {
+        const cached = localStorage.getItem('cached_semesters');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (parsed && parsed.length > 0) {
+            setLocalSemesters(parsed);
+            
+            const cachedActiveId = localStorage.getItem('cached_active_semester_id');
+            if (cachedActiveId && parsed.some((s: any) => s.id === cachedActiveId)) {
+              setSelectedSemesterId(cachedActiveId);
+            } else {
+              setSelectedSemesterId(parsed[0].id);
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load cached semesters:', err);
+      }
     }
-  }, [activeSemester, semesters]);
+  }, [semesters, activeSemester]);
+
+  // Set default selected semester when localSemesters load
+  useEffect(() => {
+    if (localSemesters.length > 0 && !selectedSemesterId) {
+      const active = localSemesters.find(s => s.isActive);
+      if (active) {
+        setSelectedSemesterId(active.id);
+      } else {
+        setSelectedSemesterId(localSemesters[0].id);
+      }
+    }
+  }, [localSemesters, selectedSemesterId]);
 
   // PWA Install logic
   useEffect(() => {
@@ -44,7 +101,6 @@ export default function StudentScheduleView({
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 
-    // Check if already installed
     if (window.matchMedia('(display-mode: standalone)').matches) {
       setIsInstallable(false);
     }
@@ -64,11 +120,19 @@ export default function StudentScheduleView({
     }
   };
 
-  const currentSemester = semesters.find(s => s.id === selectedSemesterId) || null;
+  const currentSemester = localSemesters.find(s => s.id === selectedSemesterId) || null;
   const subjects = currentSemester?.subjects || [];
 
   return (
     <div className="min-h-screen flex flex-col bg-zinc-50 dark:bg-zinc-950 transition-colors duration-200">
+      {/* Offline Alert Banner */}
+      {isOffline && (
+        <div className="w-full bg-amber-500 text-white py-2.5 px-4 text-center text-xs font-bold flex items-center justify-center gap-2 shadow-inner animate-in slide-in-from-top duration-300">
+          <WifiOff className="w-4 h-4 shrink-0 animate-bounce" />
+          <span>Modo Sin Conexión activo. Mostrando horarios guardados localmente.</span>
+        </div>
+      )}
+
       {/* Header */}
       <header className="sticky top-0 z-30 w-full bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md border-b border-purple-100 dark:border-purple-950/60 px-4 py-3.5 sm:px-6">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
@@ -90,7 +154,7 @@ export default function StudentScheduleView({
             {isInstallable && (
               <button
                 onClick={handleInstallClick}
-                className="flex items-center gap-1.5 px-3.5 py-1.5 sm:px-4 sm:py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-xl text-xs font-bold shadow-md shadow-purple-500/10 hover:shadow-lg transition-all active:scale-95 animate-bounce-slow"
+                className="flex items-center gap-1.5 px-3.5 py-1.5 sm:px-4 sm:py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-xl text-xs font-bold shadow-md shadow-purple-500/10 hover:shadow-lg transition-all active:scale-95"
               >
                 <Download className="w-4 h-4" />
                 <span className="hidden xs:inline">Instalar App</span>
@@ -111,8 +175,8 @@ export default function StudentScheduleView({
       {/* Main Content */}
       <main className="flex-1 w-full max-w-6xl mx-auto px-4 py-8 sm:px-6 flex flex-col gap-8">
         
-        {semesters.length === 0 ? (
-          <div className="flex-1 flex flex-col items-center justify-center py-20 text-center">
+        {localSemesters.length === 0 ? (
+          <div className="flex-1 flex flex-col items-center justify-center py-20 text-center animate-zoom-in">
             <div className="w-16 h-16 rounded-3xl bg-purple-50 dark:bg-purple-950/50 border border-purple-100 dark:border-purple-900 flex items-center justify-center text-purple-600 dark:text-purple-400 mb-4">
               <Sparkles className="w-8 h-8" />
             </div>
@@ -136,9 +200,9 @@ export default function StudentScheduleView({
                 Seleccionar Semestre
               </label>
 
-              {/* Responsive tab/list switcher */}
+              {/* Responsive tab list */}
               <div className="flex flex-wrap gap-2.5 pb-2">
-                {semesters.map((sem) => {
+                {localSemesters.map((sem) => {
                   const isSelected = sem.id === selectedSemesterId;
                   return (
                     <button
@@ -167,7 +231,7 @@ export default function StudentScheduleView({
             </div>
 
             {/* Grid Schedule Area */}
-            <div className="bg-white dark:bg-zinc-900/40 p-5 sm:p-6 rounded-3xl border border-purple-100/60 dark:border-purple-950/50 shadow-xs">
+            <div className="bg-white dark:bg-zinc-900/40 p-4 sm:p-6 rounded-3xl border border-purple-100/60 dark:border-purple-950/50 shadow-xs">
               <GridHorario subjects={subjects} />
             </div>
           </>
@@ -175,7 +239,7 @@ export default function StudentScheduleView({
       </main>
 
       {/* Footer */}
-      <footer className="w-full py-6 text-center border-t border-purple-100 dark:border-purple-950/60 text-xs text-purple-500/70 dark:text-purple-600">
+      <footer className="w-full py-6 text-center border-t border-purple-100 dark:border-purple-950/60 text-xs text-purple-500/70 dark:text-purple-650">
         <p>© 2026 Enfermería. Todos los derechos reservados.</p>
         <p className="mt-1">PWA construida con Next.js y Vercel Postgres</p>
       </footer>
