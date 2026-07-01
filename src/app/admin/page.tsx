@@ -285,7 +285,9 @@ export default function AdminPage() {
             >
               {authLoading ? (
                 <>
-                  <LottieSpinner size={20} className="invert dark:invert-0" />
+                  <div className="w-5 h-5 rounded-full bg-white dark:bg-zinc-900 flex items-center justify-center overflow-hidden shrink-0 shadow-xs">
+                    <LottieSpinner size={16} />
+                  </div>
                   <span>Ingresando...</span>
                 </>
               ) : (

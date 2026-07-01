@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef } from 'react';
-import lottie from 'lottie-web';
+import healthAnimation from './HEATLH.json';
 
 interface LottieSpinnerProps {
   size?: number; // Tamaño en píxeles
@@ -14,16 +14,26 @@ export default function LottieSpinner({ size = 80, className = '' }: LottieSpinn
   useEffect(() => {
     if (!containerRef.current) return;
 
-    const anim = lottie.loadAnimation({
-      container: containerRef.current,
-      renderer: 'svg',
-      loop: true,
-      autoplay: true,
-      path: '/HEATLH.json', // Carga el archivo lottie desde la carpeta public
+    let anim: any;
+
+    // Importación dinámica de lottie-web en el cliente para evitar errores de SSR (Server-Side Rendering)
+    import('lottie-web').then((lottieModule) => {
+      const lottie = lottieModule.default;
+      if (!containerRef.current) return;
+      
+      anim = lottie.loadAnimation({
+        container: containerRef.current,
+        renderer: 'svg',
+        loop: true,
+        autoplay: true,
+        animationData: healthAnimation,
+      });
     });
 
     return () => {
-      anim.destroy();
+      if (anim && typeof anim.destroy === 'function') {
+        anim.destroy();
+      }
     };
   }, []);
 
@@ -31,7 +41,7 @@ export default function LottieSpinner({ size = 80, className = '' }: LottieSpinn
     <div 
       ref={containerRef} 
       style={{ width: `${size}px`, height: `${size}px` }} 
-      className={`flex items-center justify-center ${className}`}
+      className={`flex items-center justify-center overflow-hidden ${className}`}
     />
   );
 }
