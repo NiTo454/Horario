@@ -1,20 +1,20 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { 
-  Lock, 
-  Unlock, 
-  Settings, 
-  Plus, 
-  Trash2, 
-  Edit, 
-  Check, 
-  AlertCircle, 
-  Calendar, 
-  ChevronRight, 
-  ArrowLeft, 
-  BookOpen, 
-  User, 
+import {
+  Lock,
+  Unlock,
+  Settings,
+  Plus,
+  Trash2,
+  Edit,
+  Check,
+  AlertCircle,
+  Calendar,
+  ChevronRight,
+  ArrowLeft,
+  BookOpen,
+  User,
   MapPin,
   Sparkles,
   RefreshCw,
@@ -25,13 +25,13 @@ import Link from 'next/link';
 import FormularioMateria from '@/components/FormularioMateria';
 import LottieSpinner from '@/components/LottieSpinner';
 import { Semester, Subject } from '@/types';
-import { 
-  getSemesters, 
-  createSemester, 
-  updateSemester, 
-  deleteSemester, 
-  deleteSubject, 
-  verifyAdminPassword 
+import {
+  getSemesters,
+  createSemester,
+  updateSemester,
+  deleteSemester,
+  deleteSubject,
+  verifyAdminPassword
 } from '../actions/schedule';
 
 export default function AdminPage() {
@@ -69,7 +69,7 @@ export default function AdminPage() {
       } else {
         setCheckingAuth(false);
       }
-    }, 1000); // 1-second transition delay
+    }, 2500); // 1-second transition delay
 
     return () => clearTimeout(timer);
   }, []);
@@ -86,9 +86,9 @@ export default function AdminPage() {
           slots: (sub.slots || []).map((slot: any) => ({ ...slot }))
         }))
       })) as any[];
-      
+
       setSemesters(formattedData);
-      
+
       // Auto-select first semester if none selected
       if (formattedData.length > 0 && !selectedSemesterId) {
         // Prefer active one
@@ -106,10 +106,10 @@ export default function AdminPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!password) return;
-    
+
     setAuthLoading(true);
     setAuthError(null);
-    
+
     try {
       // Artificial delay of 1.2s so they can see the heartbeat loader loop beautifully
       const [result] = await Promise.all([
@@ -182,7 +182,7 @@ export default function AdminPage() {
     if (!confirm('¿Está seguro de eliminar este semestre? Se eliminarán todas sus materias y horarios asociados.')) {
       return;
     }
-    
+
     try {
       const result = await deleteSemester(id);
       if (result.success) {
@@ -202,7 +202,7 @@ export default function AdminPage() {
     if (!confirm('¿Está seguro de eliminar esta materia?')) {
       return;
     }
-    
+
     try {
       const result = await deleteSubject(id);
       if (result.success) {
@@ -237,7 +237,7 @@ export default function AdminPage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-zinc-50 to-purple-50/30 dark:from-zinc-950 dark:to-purple-950/10 flex flex-col items-center justify-center p-4">
         <div className="w-full max-w-md bg-white dark:bg-zinc-900 border border-purple-100 dark:border-purple-950 rounded-3xl shadow-xl overflow-hidden animate-zoom-in">
-          
+
           {/* Logo header */}
           <div className="bg-gradient-to-br from-purple-600 to-indigo-700 p-8 text-center text-white flex flex-col items-center gap-3">
             <div className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center">
@@ -306,7 +306,7 @@ export default function AdminPage() {
                 </>
               )}
             </button>
-            
+
             <Link
               href="/"
               className="text-center text-xs text-purple-500 hover:text-purple-700 font-bold transition-colors mt-1 flex items-center justify-center gap-1.5"
@@ -323,7 +323,7 @@ export default function AdminPage() {
   // Render Dashboard
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-sm flex flex-col transition-colors duration-200">
-      
+
       {/* Admin Header */}
       <header className="sticky top-0 z-30 w-full bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md border-b border-purple-100 dark:border-purple-950 px-4 py-3.5 sm:px-6">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -342,7 +342,7 @@ export default function AdminPage() {
               </p>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-3">
             <button
               onClick={loadSemesters}
@@ -363,11 +363,11 @@ export default function AdminPage() {
 
       {/* Main Admin Grid */}
       <main className="max-w-7xl mx-auto w-full px-4 py-8 sm:px-6 grid grid-cols-1 lg:grid-cols-12 gap-8 flex-1">
-        
+
         {/* Left Column: Semesters Management */}
         <section className="lg:col-span-4 flex flex-col gap-6">
           <div className="bg-white dark:bg-zinc-900 p-5 rounded-3xl border border-purple-100/60 dark:border-purple-950/60 shadow-xs flex flex-col gap-4">
-            
+
             {/* Header section */}
             <div className="flex items-center justify-between border-b border-purple-50 dark:border-purple-950 pb-3">
               <span className="font-bold text-purple-950 dark:text-purple-100 flex items-center gap-1.5">
@@ -396,7 +396,7 @@ export default function AdminPage() {
                 <span className="text-xs font-bold text-purple-950 dark:text-purple-200">
                   {editingSemesterId ? 'Editar Semestre' : 'Crear Semestre'}
                 </span>
-                
+
                 {semesterError && (
                   <p className="text-[11px] text-red-500 font-semibold">{semesterError}</p>
                 )}
@@ -456,11 +456,10 @@ export default function AdminPage() {
                   return (
                     <div
                       key={sem.id}
-                      className={`group flex items-center justify-between p-3 rounded-2xl border transition-all ${
-                        isSelected
+                      className={`group flex items-center justify-between p-3 rounded-2xl border transition-all ${isSelected
                           ? 'bg-purple-500 text-white border-purple-500 shadow-md shadow-purple-500/10'
                           : 'bg-white dark:bg-zinc-900 border-purple-100 dark:border-purple-900 text-purple-950 dark:text-purple-350 hover:bg-purple-50/30 dark:hover:bg-purple-950/20'
-                      }`}
+                        }`}
                     >
                       <button
                         onClick={() => {
@@ -472,9 +471,8 @@ export default function AdminPage() {
                         <ChevronRight className={`w-3.5 h-3.5 shrink-0 ${isSelected ? 'text-white' : 'text-purple-400'}`} />
                         <span className="truncate">{sem.name}</span>
                         {sem.isActive && (
-                          <span className={`px-1.5 py-0.5 rounded-full text-[8px] font-bold uppercase ${
-                            isSelected ? 'bg-white text-purple-700' : 'bg-purple-100 text-purple-700 dark:bg-purple-950/60 dark:text-purple-400'
-                          }`}>
+                          <span className={`px-1.5 py-0.5 rounded-full text-[8px] font-bold uppercase ${isSelected ? 'bg-white text-purple-700' : 'bg-purple-100 text-purple-700 dark:bg-purple-950/60 dark:text-purple-400'
+                            }`}>
                             Fijado
                           </span>
                         )}
@@ -483,18 +481,16 @@ export default function AdminPage() {
                       <div className="flex gap-1 shrink-0 opacity-80 group-hover:opacity-100 transition-opacity">
                         <button
                           onClick={() => handleEditSemester(sem)}
-                          className={`p-1 rounded-lg transition-colors ${
-                            isSelected ? 'hover:bg-white/20 text-white' : 'hover:bg-purple-50 text-purple-600 dark:hover:bg-purple-950/50'
-                          }`}
+                          className={`p-1 rounded-lg transition-colors ${isSelected ? 'hover:bg-white/20 text-white' : 'hover:bg-purple-50 text-purple-600 dark:hover:bg-purple-950/50'
+                            }`}
                           title="Editar"
                         >
                           <Edit className="w-3.5 h-3.5" />
                         </button>
                         <button
                           onClick={() => handleDeleteSemester(sem.id)}
-                          className={`p-1 rounded-lg transition-colors ${
-                            isSelected ? 'hover:bg-white/20 text-white' : 'hover:bg-red-50 text-red-500 dark:hover:bg-red-950/40'
-                          }`}
+                          className={`p-1 rounded-lg transition-colors ${isSelected ? 'hover:bg-white/20 text-white' : 'hover:bg-red-50 text-red-500 dark:hover:bg-red-950/40'
+                            }`}
                           title="Eliminar"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -520,7 +516,7 @@ export default function AdminPage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
-              
+
               {/* Add/Edit Subject Form Box */}
               <div className="bg-white dark:bg-zinc-900 p-5 sm:p-6 rounded-3xl border border-purple-100/60 dark:border-purple-950/60 shadow-xs md:col-span-7">
                 <FormularioMateria
@@ -553,7 +549,7 @@ export default function AdminPage() {
                   <div className="flex flex-col gap-3 max-h-[480px] overflow-y-auto pr-1">
                     {activeSemester.subjects?.map((sub) => {
                       const slotsCount = sub.slots.length;
-                      
+
                       let borderClass = 'border-purple-200 dark:border-purple-900';
                       let colorDot = 'bg-purple-500';
                       if (sub.color === 'indigo') { borderClass = 'border-indigo-200 dark:border-indigo-900'; colorDot = 'bg-indigo-500'; }
@@ -571,7 +567,7 @@ export default function AdminPage() {
                             <span className="font-bold text-purple-950 dark:text-purple-100 text-xs line-clamp-2 pr-1">
                               {sub.name}
                             </span>
-                            
+
                             <div className="flex gap-0.5 shrink-0">
                               <button
                                 onClick={() => setSubjectToEdit(sub)}
