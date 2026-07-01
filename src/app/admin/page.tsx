@@ -235,32 +235,23 @@ export default function AdminPage() {
               <Lock className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h2 className="text-xl font-black tracking-tight leading-tight">Acceso Administrativo</h2>
-              <p className="text-purple-200 text-xs mt-1">Configuración y Edición de Horarios</p>
+              <h2 className="text-xl font-black tracking-tight leading-tight">Panel de Gestión</h2>
+              <p className="text-purple-200 text-xs mt-1">Identificación requerida para editar horarios</p>
             </div>
           </div>
 
           {/* Form body */}
           <form onSubmit={handleLogin} className="p-8 flex flex-col gap-6">
-            <div className="bg-purple-50/50 dark:bg-purple-950/20 border border-purple-100/50 dark:border-purple-900/50 p-4 rounded-2xl">
-              <p className="text-xs text-purple-950 dark:text-purple-300 font-semibold leading-relaxed">
-                ℹ️ **Nota de Acceso**: Ingresa la clave de administrador para configurar semestres, añadir materias y asignar bloques de horario. 
-              </p>
-              <p className="text-[10px] text-purple-500/90 dark:text-purple-400 font-medium mt-1.5">
-                *(Esta clave se configura en el archivo <code className="bg-purple-100/50 dark:bg-purple-900/60 px-1 py-0.5 rounded font-mono">.env</code> local o en Vercel)*
-              </p>
-            </div>
-
             {authError && (
-              <div className="p-3.5 bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-950 rounded-xl flex gap-2.5 items-center text-xs animate-pulse">
+              <div className="p-3.5 bg-red-50 dark:bg-red-950/20 text-red-650 dark:text-red-400 border border-red-100 dark:border-red-950 rounded-xl flex gap-2.5 items-center text-xs animate-pulse">
                 <AlertCircle className="w-4 h-4 shrink-0" />
                 <span className="font-bold">{authError}</span>
               </div>
             )}
 
-            <div className="flex flex-col gap-1.5">
+            <div className="flex flex-col gap-2">
               <label htmlFor="admin-pass" className="text-xs font-bold uppercase tracking-wider text-purple-900 dark:text-purple-400">
-                Contraseña de Administrador
+                Clave de Seguridad
               </label>
               <div className="relative">
                 <input
@@ -269,19 +260,19 @@ export default function AdminPage() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Ej. admin123"
-                  className="w-full pl-4 pr-11 py-3 rounded-xl border border-purple-100 dark:border-purple-800 bg-white dark:bg-zinc-950 text-purple-950 dark:text-purple-100 focus:outline-hidden focus:ring-2 focus:ring-purple-650 focus:border-transparent transition-all text-sm"
+                  placeholder="••••••••"
+                  className="w-full pl-4 pr-11 py-3.5 rounded-xl border border-purple-100 dark:border-purple-800 bg-white dark:bg-zinc-950 text-purple-950 dark:text-purple-100 focus:outline-hidden focus:ring-2 focus:ring-purple-650 focus:border-transparent transition-all text-sm tracking-widest font-mono placeholder:tracking-normal placeholder:font-sans"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-3.5 p-1 text-purple-400 hover:text-purple-600 dark:hover:text-purple-250 transition-colors"
-                  title={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                  className="absolute right-3.5 top-4 p-1 text-purple-400 hover:text-purple-600 dark:hover:text-purple-250 transition-colors"
+                  title={showPassword ? "Ocultar clave" : "Mostrar clave"}
                 >
                   {showPassword ? (
-                    <EyeOff className="w-4 h-4" />
+                    <EyeOff className="w-4.5 h-4.5" />
                   ) : (
-                    <Eye className="w-4 h-4" />
+                    <Eye className="w-4.5 h-4.5" />
                   )}
                 </button>
               </div>
@@ -290,27 +281,27 @@ export default function AdminPage() {
             <button
               type="submit"
               disabled={authLoading}
-              className="w-full py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold transition-all shadow-md hover:shadow-lg active:scale-98 disabled:opacity-50 flex items-center justify-center gap-2"
+              className="w-full py-3.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold transition-all shadow-md hover:shadow-lg active:scale-98 disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {authLoading ? (
                 <>
                   <LottieSpinner size={20} className="invert dark:invert-0" />
-                  <span>Verificando...</span>
+                  <span>Ingresando...</span>
                 </>
               ) : (
                 <>
                   <Unlock className="w-4 h-4" />
-                  <span>Iniciar Sesión</span>
+                  <span>Desbloquear Panel</span>
                 </>
               )}
             </button>
             
             <Link
               href="/"
-              className="text-center text-xs text-purple-500 hover:text-purple-700 font-bold transition-colors mt-1.5 flex items-center justify-center gap-1.5"
+              className="text-center text-xs text-purple-500 hover:text-purple-700 font-bold transition-colors mt-1 flex items-center justify-center gap-1.5"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
-              Volver a vista estudiantes
+              Volver a la vista del alumno
             </Link>
           </form>
         </div>
