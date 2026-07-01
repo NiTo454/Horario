@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #faf9ff; /* Soft purple-tinted white for maximum premium feel */
+  --foreground: #22123b; /* Deep purple slate for readable text */
 }
 
 @theme inline {
@@ -14,8 +14,8 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #090514; /* Deep dark purple-tinted night color */
+    --foreground: #f4f1fa; /* Very soft purple white */
   }
 }
 
@@ -23,4 +23,54 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d8b4fe; /* light purple */
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a855f7; /* vibrant purple */
+}
+
+/* Glassmorphism utility card backdrops */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(233, 213, 255, 0.4);
+}
+
+.dark .glass-panel {
+  background: rgba(15, 10, 30, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(168, 85, 247, 0.1);
+}
+
+/* Modals anim inside app */
+@keyframes zoomIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-zoom-in {
+  animation: zoomIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
