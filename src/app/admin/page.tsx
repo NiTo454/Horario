@@ -71,11 +71,11 @@ export default function AdminPage() {
     try {
       const data = await getSemesters();
       // Map database objects to our frontend types
-      const formattedData = data.map(sem => ({
+      const formattedData = (data as any[]).map((sem: any) => ({
         ...sem,
-        subjects: sem.subjects.map(sub => ({
+        subjects: (sem.subjects || []).map((sub: any) => ({
           ...sub,
-          slots: sub.slots.map(slot => ({ ...slot }))
+          slots: (sub.slots || []).map((slot: any) => ({ ...slot }))
         }))
       })) as any[];
       
