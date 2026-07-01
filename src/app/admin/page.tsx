@@ -59,15 +59,19 @@ export default function AdminPage() {
   // Subject form states
   const [subjectToEdit, setSubjectToEdit] = useState<Subject | null>(null);
 
-  // Check login on mount
+  // Check login on mount with a smooth simulated transition to show Lottie heartbeat
   useEffect(() => {
     const isLogged = localStorage.getItem('admin_authenticated');
-    if (isLogged === 'true') {
-      setIsAuthenticated(true);
-      loadSemesters();
-    } else {
-      setCheckingAuth(false);
-    }
+    const timer = setTimeout(() => {
+      if (isLogged === 'true') {
+        setIsAuthenticated(true);
+        loadSemesters();
+      } else {
+        setCheckingAuth(false);
+      }
+    }, 1000); // 1-second transition delay
+
+    return () => clearTimeout(timer);
   }, []);
 
   const loadSemesters = async () => {
@@ -107,17 +111,22 @@ export default function AdminPage() {
     setAuthError(null);
     
     try {
-      const result = await verifyAdminPassword(password);
+      // Artificial delay of 1.2s so they can see the heartbeat loader loop beautifully
+      const [result] = await Promise.all([
+        verifyAdminPassword(password),
+        new Promise(resolve => setTimeout(resolve, 1200))
+      ]);
+
       if (result.success) {
         setIsAuthenticated(true);
         localStorage.setItem('admin_authenticated', 'true');
         loadSemesters();
       } else {
         setAuthError('Contraseña incorrecta. Inténtelo de nuevo.');
+        setAuthLoading(false);
       }
     } catch (err) {
       setAuthError('Error de red al verificar contraseña.');
-    } finally {
       setAuthLoading(false);
     }
   };

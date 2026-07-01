@@ -29,6 +29,18 @@ export default function GridHorario({ subjects }: GridHorarioProps) {
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
   const [selectedDay, setSelectedDay] = useState<number>(getTodayValue());
 
+  // Detect mobile size on mount and window resizing to default to mobile list timeline
+  React.useEffect(() => {
+    const checkMobile = () => {
+      if (window.innerWidth < 768) {
+        setViewMode('list');
+      }
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   // Time configurations
   const START_HOUR = 7; // 07:00
   const END_HOUR = 21;  // 21:00
@@ -45,6 +57,21 @@ export default function GridHorario({ subjects }: GridHorarioProps) {
   const timeToMinutes = (timeStr: string) => {
     const [h, m] = timeStr.split(':').map(Number);
     return h * 60 + m;
+  };
+
+  // Check if a schedule slot is happening right now
+  const isSlotActiveNow = (slot: ScheduleSlot) => {
+    const today = new Date();
+    const currentDay = today.getDay(); // 0 = Sun, 1 = Mon, ..., 6 = Sat
+    
+    // Check if correct day of week
+    if (slot.dayOfWeek !== currentDay) return false;
+    
+    const currentMinutes = today.getHours() * 60 + today.getMinutes();
+    const startMins = timeToMinutes(slot.startTime);
+    const endMins = timeToMinutes(slot.endTime);
+    
+    return currentMinutes >= startMins && currentMinutes <= endMins;
   };
 
   const getGridRowRange = (slot: ScheduleSlot) => {
@@ -241,7 +268,7 @@ export default function GridHorario({ subjects }: GridHorarioProps) {
               {/* Mobile View (Day Tabs + Vertical Timeline) - Visible only on mobile */}
               <div className="block md:hidden w-full flex flex-col gap-4 animate-zoom-in">
                 {/* Horizontal Scrollable Day Selector */}
-                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none snap-x">
+                <div className="flex gap-2 overflow-x-auto pb-2.5 snap-x [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                   {activeDays.map(day => {
                     const isSelected = selectedDay === day.value;
                     const daySlotsCount = allSlots.filter(slot => slot.dayOfWeek === day.value).length;
@@ -250,13 +277,13 @@ export default function GridHorario({ subjects }: GridHorarioProps) {
                       <button
                         key={day.value}
                         onClick={() => setSelectedDay(day.value)}
-                        className={`flex-1 min-w-[70px] snap-center py-2.5 px-3 rounded-2xl border text-center transition-all flex flex-col gap-0.5 ${
+                        className={`flex-1 min-w-[72px] snap-center py-2.5 px-3 rounded-2xl border text-center transition-all flex flex-col gap-0.5 ${
                           isSelected
-                            ? 'bg-purple-600 border-purple-600 text-white shadow-md shadow-purple-500/10'
+                            ? 'bg-purple-650 border-purple-655 text-white shadow-md shadow-purple-500/15 scale-102 font-extrabold'
                             : 'bg-white dark:bg-zinc-900 border-purple-100 dark:border-purple-900 text-purple-900 dark:text-purple-300'
                         }`}
                       >
-                        <span className="text-[10px] uppercase font-bold tracking-wider opacity-80">
+                        <span className="text-[10px] uppercase tracking-wider opacity-80">
                           {day.label.slice(0, 3)}
                         </span>
                         <span className="text-xs font-black">
@@ -268,7 +295,7 @@ export default function GridHorario({ subjects }: GridHorarioProps) {
                 </div>
 
                 {/* Selected Day Timeline */}
-                <div className="mt-2 flex flex-col gap-4">
+                <div className="mt-2 flex flex-col gap-4 animate-fade-in">
                   <div className="flex items-center justify-between border-b border-purple-100 dark:border-purple-900/50 pb-2">
                     <span className="font-bold text-sm text-purple-950 dark:text-purple-200 uppercase tracking-widest">
                       Agenda del {DAYS_OF_WEEK.find(d => d.value === selectedDay)?.label}
@@ -286,45 +313,62 @@ export default function GridHorario({ subjects }: GridHorarioProps) {
                       {allSlots
                         .filter(slot => slot.dayOfWeek === selectedDay)
                         .sort((a, b) => a.startTime.localeCompare(b.startTime))
-                        .map((slot, idx) => (
-                          <div key={`${slot.id}-${idx}`} className="relative flex flex-col gap-1.5">
-                            {/* Timeline node dot */}
-                            <span className="absolute -left-[33px] top-1.5 w-4.5 h-4.5 rounded-full bg-purple-600 border-4 border-zinc-50 dark:border-zinc-950 shadow-xs" />
-                            
-                            {/* Time indicators */}
-                            <div className="flex items-center gap-1.5 text-[11px] font-bold text-purple-600 dark:text-purple-400">
-                              <Clock className="w-3.5 h-3.5" />
-                              <span>{slot.startTime} - {slot.endTime}</span>
-                            </div>
-
-                            {/* Subject card */}
-                            <button
-                              onClick={() => setSelectedSubject(slot.subject)}
-                              className={`p-4 rounded-2xl border text-left text-xs transition-all shadow-xs flex flex-col gap-2 ${getColorClasses(slot.subject.color)}`}
-                            >
-                              <span className="font-bold text-sm text-purple-950 dark:text-white leading-tight">
-                                {slot.subject.name}
-                              </span>
-                              
-                              {(slot.subject.teacher || slot.subject.classroom) && (
-                                <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] opacity-80 border-t border-purple-950/5 dark:border-white/5 pt-2 mt-1">
-                                  {slot.subject.classroom && (
-                                    <span className="flex items-center gap-1">
-                                      <MapPin className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
-                                      <span>Aula: {slot.subject.classroom}</span>
-                                    </span>
-                                  )}
-                                  {slot.subject.teacher && (
-                                    <span className="flex items-center gap-1">
-                                      <User className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
-                                      <span>Docente: {slot.subject.teacher}</span>
-                                    </span>
-                                  )}
-                                </div>
+                        .map((slot, idx) => {
+                          const isActive = isSlotActiveNow(slot);
+                          return (
+                            <div key={`${slot.id}-${idx}`} className={`relative flex flex-col gap-2 transition-all duration-350 ${isActive ? 'scale-[1.01]' : ''}`}>
+                              {/* Timeline node dot */}
+                              {isActive ? (
+                                <span className="absolute -left-[35px] top-1 w-5.5 h-5.5 rounded-full bg-purple-600 border-4 border-zinc-50 dark:border-zinc-950 flex items-center justify-center shadow-lg shadow-purple-500/30 animate-pulse">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-white" />
+                                </span>
+                              ) : (
+                                <span className="absolute -left-[33px] top-1.5 w-4.5 h-4.5 rounded-full bg-purple-300 dark:bg-purple-800 border-4 border-zinc-50 dark:border-zinc-950 shadow-xs" />
                               )}
-                            </button>
-                          </div>
-                        ))}
+                              
+                              {/* Time indicators */}
+                              <div className="flex items-center justify-between">
+                                <div className={`flex items-center gap-1.5 text-[11px] font-bold ${isActive ? 'text-purple-600 dark:text-purple-450 animate-pulse' : 'text-purple-500/70 dark:text-purple-500'}`}>
+                                  <Clock className="w-3.5 h-3.5" />
+                                  <span>{slot.startTime} - {slot.endTime}</span>
+                                </div>
+                                {isActive && (
+                                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-widest bg-gradient-to-r from-purple-600 to-indigo-650 text-white shadow-xs animate-pulse">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
+                                    Clase Actual
+                                  </span>
+                                )}
+                              </div>
+
+                              {/* Subject card */}
+                              <button
+                                onClick={() => setSelectedSubject(slot.subject)}
+                                className={`p-4 rounded-2xl border text-left text-xs transition-all shadow-xs flex flex-col gap-2 hover:shadow-md ${getColorClasses(slot.subject.color)} ${isActive ? 'ring-2 ring-purple-600/30 dark:ring-purple-600/20 shadow-md' : ''}`}
+                              >
+                                <span className="font-bold text-sm text-purple-950 dark:text-white leading-tight">
+                                  {slot.subject.name}
+                                </span>
+                                
+                                {(slot.subject.teacher || slot.subject.classroom) && (
+                                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] opacity-80 border-t border-purple-950/5 dark:border-white/5 pt-2 mt-1">
+                                    {slot.subject.classroom && (
+                                      <span className="flex items-center gap-1">
+                                        <MapPin className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+                                        <span>Aula: {slot.subject.classroom}</span>
+                                      </span>
+                                    )}
+                                    {slot.subject.teacher && (
+                                      <span className="flex items-center gap-1">
+                                        <User className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+                                        <span>Docente: {slot.subject.teacher}</span>
+                                      </span>
+                                    )}
+                                  </div>
+                                )}
+                              </button>
+                            </div>
+                          );
+                        })}
                     </div>
                   )}
                 </div>
